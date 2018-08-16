@@ -17,6 +17,7 @@ cc.Class({
         var ShaderLib = require("ShaderLib");
         ShaderLib.addShader(require("OverlayShader"));
         ShaderLib.addShader(require("RainShader"));
+        ShaderLib.addShader(require("WaveShader"));
         // TODO: 加更多Shader
     },
 
@@ -45,7 +46,7 @@ cc.Class({
         if (!mat) {
             var CustomMaterial = require("CustomMaterial");
             mat = new CustomMaterial(name);
-            this.spImage.setMaterial(name, mat);	
+            this.spImage.setMaterial(name, mat);
         }
         this.spImage.node.color = new cc.Color().fromHEX("#FBC00C")
         this.spImage.activateMaterial(name);
@@ -60,7 +61,7 @@ cc.Class({
         var mat = this.spImage.getMaterial(name);
         if (!mat) {
             var CustomMaterial = require("CustomMaterial");
-            mat = new CustomMaterial(name, 
+            mat = new CustomMaterial(name,
                 [
                     { name: 'texSize', type: renderer.PARAM_FLOAT2 },
                     { name: 'iResolution', type: renderer.PARAM_FLOAT3 },
@@ -80,14 +81,33 @@ cc.Class({
         mat.setParamValue("texSize", texSize);
     },
 
+    onClickWave () {
+        this.resetImage();
+        const name = 'wave';
+        this._start = Date.now();
+        let mat = this.spImage.getMaterial(name);
+
+        if (!mat) {
+            const CustomMaterial = require("CustomMaterial");
+            mat = new CustomMaterial(name, [
+                {name: 'iTime', type: renderer.PARAM_FLOAT},
+                {name: 'iOffset', type: renderer.PARAM_FLOAT2}
+            ]);
+            this.spImage.setMaterial(name, mat);
+        }
+        this.spImage.activateMaterial(name);
+        mat.setParamValue('iOffset', new cc.Vec2(0, 1.0));
+    },
+
     update() {
-        var mat = this.spImage.getCurrMaterial();
+        const mat = this.spImage.getCurrMaterial();
         if (!mat) {
             return;
         }
-        if (mat.name === 'rainheart') {
-            var now = Date.now();
-            var time = (now - this._start) / 1000;
+
+        if (["rainheart", "wave"].includes(mat.name)) {
+            const now = Date.now();
+            const time = (now - this._start) / 1000;
             mat.setParamValue('iTime', time);
         }
     },
