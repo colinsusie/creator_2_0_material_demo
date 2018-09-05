@@ -8,10 +8,8 @@ SpriteHook.init = function() {
     const GraySpriteMaterial = renderEngine.GraySpriteMaterial;
     const STATE_CUSTOM = 101;
 
-    var sprite = new cc.Sprite();
-
     // 取自定义材质
-    sprite.__proto__.getMaterial = function(name) {
+    cc.Sprite.prototype.getMaterial = function(name) {
         if (this._materials) {
             return this._materials[name];
         } else {
@@ -20,7 +18,7 @@ SpriteHook.init = function() {
     }
 
     // 设置自定义材质
-    sprite.__proto__.setMaterial = function(name, mat) {
+    cc.Sprite.prototype.setMaterial = function(name, mat) {
         if (!this._materials) {
             this._materials = {}
         }
@@ -28,7 +26,7 @@ SpriteHook.init = function() {
     }
 
     // 激活某个材质
-    sprite.__proto__.activateMaterial = function(name) {
+    cc.Sprite.prototype.activateMaterial = function(name) {
         var mat = this.getMaterial(name);
         if (mat && mat !== this._currMaterial) {
             if (mat) {
@@ -50,29 +48,18 @@ SpriteHook.init = function() {
     }
 
     // 取当前的材质
-    sprite.__proto__.getCurrMaterial = function() {
+    cc.Sprite.prototype.getCurrMaterial = function() {
         if (this._state === STATE_CUSTOM) {
             return this._currMaterial;
         }
     }
 
-    sprite.__proto__._activateMaterial = function() {
-        if (!this.enabledInHierarchy) {
-            this.disableRender();
-            return;
-        }
-
+    cc.Sprite.prototype._activateMaterial = function() {
         let spriteFrame = this._spriteFrame;
-        // cannot be activated if texture not loaded yet
-        if (!spriteFrame || !spriteFrame.textureLoaded()) {
-            this.disableRender();
-            return;
-        }
 
         // WebGL
         if (cc.game.renderType !== cc.game.RENDER_TYPE_CANVAS) {
             // Get material
-            let texture = spriteFrame.getTexture();
             let material;
             if (this._state === cc.Sprite.State.GRAY) {
                 if (!this._graySpriteMaterial) {
@@ -97,21 +84,26 @@ SpriteHook.init = function() {
                 material = this._spriteMaterial;
                 this._currMaterial = null;
             }
-            // TODO: old texture in material have been released by loader
-            if (material.texture !== texture) {
-                material.texture = texture;
-                this._updateMaterial(material);
+            // Set texture
+            if (spriteFrame && spriteFrame.textureLoaded()) {
+                let texture = spriteFrame.getTexture();
+                if (material.texture !== texture) {
+                    material.texture = texture;
+                    this._updateMaterial(material);
+                }
+                else if (material !== this._material) {
+                    this._updateMaterial(material);
+                }
+                if (this._renderData) {
+                    this._renderData.material = material;
+                }
+                this.markForUpdateRenderData(true);
+                this.markForRender(true);
             }
-            else if (material !== this._material) {
-                this._updateMaterial(material);
-            }
-            if (this._renderData) {
-                this._renderData.material = material;
+            else {
+                this.disableRender();
             }
         }
-        
-        this.markForUpdateRenderData(true);
-        this.markForRender(true);
     }
 }
 

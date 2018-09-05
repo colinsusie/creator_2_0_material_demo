@@ -5,6 +5,8 @@ cc.Class({
     extends: cc.Component,
 
     properties: {
+        frame1: cc.SpriteFrame,
+        frame2: cc.SpriteFrame,
         spImage: cc.Sprite,
     },
 
@@ -18,29 +20,34 @@ cc.Class({
         ShaderLib.addShader(require("OverlayShader"));
         ShaderLib.addShader(require("RainShader"));
         ShaderLib.addShader(require("WaveShader"));
+        ShaderLib.addShader(require("GaussBlurs"));
+        ShaderLib.addShader(require("Outline"));
+        ShaderLib.addShader(require("Glowing"));
+        ShaderLib.addShader(require("Water"));
         // TODO: 加更多Shader
     },
 
-    resetImage() {
+    resetImage(frame) {
         this.spImage.node.color = new cc.Color().fromHEX("#FFFFFF")
         this.spImage.spriteFrame.getTexture().update({flipY: false});
+        this.spImage.spriteFrame = frame;
     },
 
     onClickGray () {
         // 灰度图
-        this.resetImage();
+        this.resetImage(this.frame1);
         this.spImage.setState(cc.Sprite.State.GRAY);
     },
 
     onClickNormal () {
         // 正常
-        this.resetImage();
+        this.resetImage(this.frame1);
         this.spImage.setState(cc.Sprite.State.NORMAL);
     },
 
     onClickOverlay () {
         // 颜色高亮效果
-        this.resetImage();
+        this.resetImage(this.frame2);
         var name = 'overlay';
         var mat = this.spImage.getMaterial(name);
         if (!mat) {
@@ -54,7 +61,7 @@ cc.Class({
 
     onClickRain () {
         // 雨珠效果
-        this.resetImage();
+        this.resetImage(this.frame1);
 
         this._start = Date.now();
         var name = 'rainheart';
@@ -82,7 +89,7 @@ cc.Class({
     },
 
     onClickWave () {
-        this.resetImage();
+        this.resetImage(this.frame1);
         const name = 'wave';
         this._start = Date.now();
         let mat = this.spImage.getMaterial(name);
@@ -99,13 +106,81 @@ cc.Class({
         mat.setParamValue('iOffset', new cc.Vec2(0, 1.0));
     },
 
+    onClickBlurs () {
+        this.resetImage(this.frame1);
+        const name = 'GaussBlurs';
+        let mat = this.spImage.getMaterial(name);
+        if (!mat) {
+            const CustomMaterial = require("CustomMaterial");
+            mat = new CustomMaterial(name, [
+                {name: 'bluramount', type: renderer.PARAM_FLOAT},
+            ]);
+            this.spImage.setMaterial(name, mat);
+        }
+        this.spImage.activateMaterial(name);
+        mat.setParamValue('bluramount', 0.05);
+    },
+
+    onClickOutline() {
+        this.resetImage(this.frame1);
+        const name = 'Outline';
+        let mat = this.spImage.getMaterial(name);
+        if (!mat) {
+            const CustomMaterial = require("CustomMaterial");
+            mat = new CustomMaterial(name, [
+                { name: 'iResolution', type: renderer.PARAM_FLOAT3 },
+            ]);
+            this.spImage.setMaterial(name, mat);
+        }
+        this.spImage.activateMaterial(name);
+        var iResolution = new cc.Vec3(this.spImage.node.width, this.spImage.node.height, 0);
+        mat.setParamValue("iResolution", iResolution);
+    },
+
+    onClickGrowing() {
+        this.resetImage(this.frame2);
+        const name = 'Glowing';
+        this._start = Date.now();
+        let mat = this.spImage.getMaterial(name);
+        if (!mat) {
+            const CustomMaterial = require("CustomMaterial");
+            mat = new CustomMaterial(name, [
+                {name: 'iResolution', type: renderer.PARAM_FLOAT3},
+                {name: 'iTime', type: renderer.PARAM_FLOAT},
+            ]);
+            this.spImage.setMaterial(name, mat);
+        }
+        this.spImage.node.color = new cc.Color().fromHEX("#1A7ADC")
+        this.spImage.activateMaterial(name);
+        var iResolution = new cc.Vec3(this.spImage.node.width, this.spImage.node.height, 0);
+        mat.setParamValue("iResolution", iResolution);
+    },
+
+    onClickWater() {
+        this.resetImage(this.frame1);
+        const name = 'Water';
+        this._start = Date.now();
+        let mat = this.spImage.getMaterial(name);
+        if (!mat) {
+            const CustomMaterial = require("CustomMaterial");
+            mat = new CustomMaterial(name, [
+                {name: 'iResolution', type: renderer.PARAM_FLOAT3},
+                {name: 'iTime', type: renderer.PARAM_FLOAT},
+            ]);
+            this.spImage.setMaterial(name, mat);
+        }
+        this.spImage.activateMaterial(name);
+        var iResolution = new cc.Vec3(this.spImage.node.width, this.spImage.node.height, 0);
+        mat.setParamValue("iResolution", iResolution);
+    },
+
     update() {
         const mat = this.spImage.getCurrMaterial();
         if (!mat) {
             return;
         }
 
-        if (["rainheart", "wave"].includes(mat.name)) {
+        if (["rainheart", "wave", "Glowing", "Water"].includes(mat.name)) {
             const now = Date.now();
             const time = (now - this._start) / 1000;
             mat.setParamValue('iTime', time);
