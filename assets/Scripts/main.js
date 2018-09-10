@@ -24,6 +24,7 @@ cc.Class({
         ShaderLib.addShader(require("Outline"));
         ShaderLib.addShader(require("Glowing"));
         ShaderLib.addShader(require("Water"));
+        ShaderLib.addShader(require("Mosaic"));
         // TODO: 加更多Shader
     },
 
@@ -174,13 +175,33 @@ cc.Class({
         mat.setParamValue("iResolution", iResolution);
     },
 
+    onClickMosaic() {
+        this.resetImage(this.frame1);
+        const name = 'Mosaic';
+        this._start = Date.now();
+        let mat = this.spImage.getMaterial(name);
+        if (!mat) {
+            const CustomMaterial = require("CustomMaterial");
+            mat = new CustomMaterial(name, [
+                {name: 'iResolution', type: renderer.PARAM_FLOAT3},
+                {name: 'mosaicSize', type: renderer.PARAM_FLOAT},
+                {name: 'iTime', type: renderer.PARAM_FLOAT},
+            ]);
+            this.spImage.setMaterial(name, mat);
+        }
+        this.spImage.activateMaterial(name);
+        var iResolution = new cc.Vec3(this.spImage.node.width, this.spImage.node.height, 0);
+        mat.setParamValue("iResolution", iResolution);
+        mat.setParamValue("mosaicSize", 16); 
+    },
+
     update() {
         const mat = this.spImage.getCurrMaterial();
         if (!mat) {
             return;
         }
 
-        if (["rainheart", "wave", "Glowing", "Water"].includes(mat.name)) {
+        if (["rainheart", "wave", "Glowing", "Water", "Mosaic"].includes(mat.name)) {
             const now = Date.now();
             const time = (now - this._start) / 1000;
             mat.setParamValue('iTime', time);
