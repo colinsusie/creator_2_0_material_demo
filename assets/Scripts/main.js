@@ -25,6 +25,7 @@ cc.Class({
         ShaderLib.addShader(require("Glowing"));
         ShaderLib.addShader(require("Water"));
         ShaderLib.addShader(require("Mosaic"));
+        ShaderLib.addShader(require("RadialBlur"));
         // TODO: 加更多Shader
     },
 
@@ -195,13 +196,30 @@ cc.Class({
         mat.setParamValue("mosaicSize", 16); 
     },
 
+    onClickRadialBlur() {
+        this.resetImage(this.frame1);
+        const name = 'RadialBlur';
+        let mat = this.spImage.getMaterial(name);
+        if (!mat) {
+            const CustomMaterial = require("CustomMaterial");
+            mat = new CustomMaterial(name, [
+                {name: 'iResolution', type: renderer.PARAM_FLOAT3},
+                {name: 'iCenter', type: renderer.PARAM_FLOAT2},
+            ]);
+            this.spImage.setMaterial(name, mat);
+        }
+        this.spImage.activateMaterial(name);
+        mat.setParamValue("iResolution", new cc.Vec3(this.spImage.node.width, this.spImage.node.height, 0));
+        mat.setParamValue("iCenter", new cc.Vec2(0.5, 0.5)); 
+    },
+
     update() {
         const mat = this.spImage.getCurrMaterial();
         if (!mat) {
             return;
         }
 
-        if (["rainheart", "wave", "Glowing", "Water", "Mosaic"].includes(mat.name)) {
+        if (["rainheart", "wave", "Glowing", "Water"].includes(mat.name)) {
             const now = Date.now();
             const time = (now - this._start) / 1000;
             mat.setParamValue('iTime', time);

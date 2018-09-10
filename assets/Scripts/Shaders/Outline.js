@@ -1,4 +1,4 @@
-// Shader: 高斯模糊
+// Shader: 描边
 
 var shader = {
     name: "Outline",
