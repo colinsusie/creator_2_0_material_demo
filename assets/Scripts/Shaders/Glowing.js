@@ -22,7 +22,7 @@ var shader = {
     uniform vec4 color;
     varying vec2 uv0;
 
-    const float radius = 5.0;
+    const float radius = 4.0;
     // const vec3 color = vec3(0.9, 0.9, 0.0);
 
     float coefficient()
@@ -43,7 +43,7 @@ var shader = {
 
         if(texel.a >= 1.0)
         {
-            finalColor = vec4(texel.rgb, 1.0);
+            finalColor = texel;
         }
         else
         {
@@ -54,7 +54,8 @@ var shader = {
                 density += texture2D(texture, vec2(uv.x - unit.x * float(i), uv.y - unit.y * float(i))).a;
                 density += texture2D(texture, vec2(uv.x + unit.x * float(i), uv.y - unit.y * float(i))).a;
             }
-            finalColor = vec4(color.rgb * density / radius * coefficient(), 1.0);
+            density = density / radius;
+            finalColor = vec4(color.rgb * density, density);
             finalColor += vec4(texel.rgb * texel.a, texel.a);
         }
         fragColor = finalColor;
